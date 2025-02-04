@@ -29,21 +29,21 @@ namespace grpc_labview
         void RegisterArenaDtor(google::protobuf::Arena*);
 
         void Clear()  final;
-        bool IsInitialized() const final;
-
-        const char* _InternalParse(const char* ptr, google::protobuf::internal::ParseContext* ctx)  override final;
+        bool IsInitialized() const;
+        const google::protobuf::MessageLite::ClassData* GetClassData() const override;
+        const char* _InternalParse(const char* ptr, google::protobuf::internal::ParseContext* ctx);
         google::protobuf::uint8* _InternalSerialize(google::protobuf::uint8* target, google::protobuf::io::EpsCopyOutputStream* stream) const override final;
-        void SetCachedSize(int size) const ;
-        int GetCachedSize(void) const ;
-        size_t ByteSizeLong() const ;
+        void SetCachedSize(int size) const;
+        int GetCachedSize(void) const;
+        size_t ByteSizeLong() const final;
         virtual void PostInteralParseAction() {};
-        
-        void MergeFrom(const google::protobuf::Message &from) final;
+
+        void MergeFrom(const google::protobuf::Message &from);
         void MergeFrom(const LVMessage &from);
-        void CopyFrom(const google::protobuf::Message &from) ;
+        void CopyFrom(const google::protobuf::Message &from);
         void CopyFrom(const LVMessage &from);
         void InternalSwap(LVMessage *other);
-        google::protobuf::Metadata GetMetadata() const final;
+        google::protobuf::Metadata GetMetadata() const;
 
         bool ParseFromByteBuffer(const grpc::ByteBuffer& buffer);
         std::unique_ptr<grpc::ByteBuffer> SerializeToByteBuffer();

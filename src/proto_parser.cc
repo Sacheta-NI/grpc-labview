@@ -45,7 +45,7 @@ namespace grpc_labview
     class ErrorCollector : public MultiFileErrorCollector
     {
     public:
-        void AddError(const std::string & filename, int line, int column, const std::string & message) override;
+        void RecordError(absl::string_view filename, int line, int column, absl::string_view message) override;
         std::string GetLVErrorMessage();
 
     private:
@@ -54,9 +54,10 @@ namespace grpc_labview
 
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
-    void ErrorCollector::AddError(const std::string & filename, int line, int column, const std::string & message)
+    void ErrorCollector::RecordError(absl::string_view filename, int line, int column, absl::string_view message)
     {
-        std::string errorMessage = filename + ": " + std::to_string(line) + " - " + message; 
+        // Convert absl::string_view to std::string for concatenation.
+        std::string errorMessage = std::string(filename) + ": " + std::to_string(line) + " (" + std::to_string(column) + ") - " + std::string(message);
         _errors.emplace_back(errorMessage);
     }
 
@@ -142,7 +143,7 @@ namespace grpc_labview
     //---------------------------------------------------------------------
     void AddFieldError(FieldDescriptor* field, std::string message)
     {
-        grpc_labview::LVProtoParser::s_Parser->m_ErrorCollector.AddError("", 0, 0, message);
+        grpc_labview::LVProtoParser::s_Parser->m_ErrorCollector.RecordError("", 0, 0, message);
     }
 
     //---------------------------------------------------------------------
@@ -264,7 +265,7 @@ LIBRARY_EXPORT int LVGetServices(grpc_labview::LVProtoParser* parser, grpc_labvi
     auto count = parser->m_FileDescriptor->service_count();
     if (NumericArrayResize(0x08, 1, services, count * sizeof(ServiceDescriptor*)) != 0)
     {
-        parser->m_ErrorCollector.AddError("", 0, 0, "Failed to resize array");
+        parser->m_ErrorCollector.RecordError("", 0, 0, "Failed to resize array");
         return -3;
     }
     (**services)->cnt = count;
