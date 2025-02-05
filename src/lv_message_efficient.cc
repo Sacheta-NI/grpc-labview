@@ -1,7 +1,8 @@
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 #include <grpc_server.h>
-#include "lv_message_efficient.h"
+#include <lv_message_efficient.h>
+#include <well_known_types.h>
 #include <sstream>
 
 //---------------------------------------------------------------------
@@ -123,13 +124,13 @@ namespace grpc_labview
 
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
+
     const char *LVMessageEfficient::ParseNestedMessage(google::protobuf::uint32 tag, const MessageElementMetadata& fieldInfo, uint32_t index, const char *protobuf_ptr, ParseContext *ctx)
     {    
         auto metadata = fieldInfo._owner->FindMetadata(fieldInfo.embeddedMessageName);
-        
         LVMessageEfficient nestedMessage(metadata);
-
         if (fieldInfo.isRepeated) {
+
             // if the array is not big enough, resize it to 2x the size
             auto numElements = 128;
             auto elementIndex = 0;
