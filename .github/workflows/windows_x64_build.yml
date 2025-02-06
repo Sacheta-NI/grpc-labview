@@ -16,9 +16,16 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
     - uses: ilammy/setup-nasm@v1.5.1
 
-    - name: Install Visual Studio 2022 Build Tools
+    - name: Check for Visual Studio 2022 Build Tools and Install if Missing
       run: |
-        choco install visualstudio2022-workload-vctools --yes || throw "Installation failed"
+        if (!(Get-Command "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\devenv.exe" -ErrorAction SilentlyContinue)) {
+          Write-Host "Visual Studio 2022 Build Tools not found. Installing..."
+          choco install visualstudio2022-workload-vctools --yes || throw "Installation failed"
+        } else {
+          Write-Host "Visual Studio 2022 Build Tools already installed."
+        }
+      shell: pwsh
+
 
     - name: Update Submodules
       working-directory: ${{runner.workspace}}/grpc-labview      
