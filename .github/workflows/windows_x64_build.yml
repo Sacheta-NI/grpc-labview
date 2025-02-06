@@ -26,7 +26,6 @@ jobs:
         }
       shell: pwsh
 
-
     - name: Update Submodules
       working-directory: ${{runner.workspace}}/grpc-labview      
       run: git submodule update --init --recursive
@@ -36,7 +35,7 @@ jobs:
 
     - name: Initialize Visual Studio Environment
       run: |
-        call "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        & "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
 
     - name: Configure CMake
       working-directory: ${{runner.workspace}}\grpc-labview\build
