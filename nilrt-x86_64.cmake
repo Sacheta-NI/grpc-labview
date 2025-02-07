@@ -15,8 +15,8 @@ set(include_path core2-64-nilrt-linux/usr/include/c++/6.3.0)
 #----------------------------------------------------------------------
 # Compilers
 #----------------------------------------------------------------------
-set(CMAKE_C_COMPILER x86_64-nilrt-linux-gcc)
-set(CMAKE_CXX_COMPILER x86_64-nilrt-linux-g++)
+set(CMAKE_C_COMPILER x86_64-nilrt-linux-gcc-10)
+set(CMAKE_CXX_COMPILER x86_64-nilrt-linux-g++-10)
 
 #----------------------------------------------------------------------
 # Default compiler flags
