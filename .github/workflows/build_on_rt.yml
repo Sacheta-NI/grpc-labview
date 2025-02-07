@@ -37,7 +37,6 @@ jobs:
        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
        gcc --version
 
-
     - name: Update Submodules
       id: submodules
       run: |
@@ -55,76 +54,33 @@ jobs:
 
     - name: Configure Host OS gRPC Support
       if: steps.hostgrpccache.outputs.cache-hit != 'true'
-      shell: cmake -P {0}
       run: |
-        set(path_separator ":")
-        set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
-        execute_process(
-          COMMAND cmake
-            -S $ENV{GITHUB_WORKSPACE}/third_party/grpc/
-            -B $ENV{GITHUB_WORKSPACE}/third_party/grpc/build
-            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-            -D gRPC_INSTALL=ON
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
+        cmake -S $GITHUB_WORKSPACE/third_party/grpc/ \
+              -B $GITHUB_WORKSPACE/third_party/grpc/build \
+              -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+              -D gRPC_INSTALL=ON
 
     - name: Build Host OS gRPC Support
       if: steps.hostgrpccache.outputs.cache-hit != 'true'
-      shell: cmake -P {0}
       run: |
-        execute_process(
-          COMMAND cmake --build $ENV{GITHUB_WORKSPACE}/third_party/grpc/build
-          RESULT_VARIABLE result
-          OUTPUT_VARIABLE output
-          ERROR_VARIABLE output
-          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
-        )
-        if (NOT result EQUAL 0)
-          string(REGEX MATCH "FAILED:.*$" error_message "${output}")
-          string(REPLACE "\n" "%0A" error_message "${error_message}")
-          message("::error::${error_message}")
-          message(FATAL_ERROR "Build failed")
-        endif()
+        cmake --build $GITHUB_WORKSPACE/third_party/grpc/build || { \
+          echo "Build failed"; exit 1; \
+        }
 
     - name: Install Host OS gRPC Support
       run: sudo cmake --install ${GITHUB_WORKSPACE}/third_party/grpc/build
 
     - name: Configure Cross Compile
-      shell: cmake -P {0}
       run: |
-        set(path_separator ":")
-        set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
-        execute_process(
-          COMMAND cmake
-            -S .
-            -B build
-            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-            -D CMAKE_TOOLCHAIN_FILE=$ENV{GITHUB_WORKSPACE}/nilrt-x86_64.cmake
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
+        cmake -S . -B build \
+              -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
+              -D CMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/nilrt-x86_64.cmake
 
     - name: Cross Compile
-      shell: cmake -P {0}
       run: |
-        execute_process(
-          COMMAND cmake --build build --config $ENV{BUILD_TYPE} -j 16
-          RESULT_VARIABLE result
-          OUTPUT_VARIABLE output
-          ERROR_VARIABLE output
-          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
-        )
-        if (NOT result EQUAL 0)
-          string(REGEX MATCH "FAILED:.*$" error_message "${output}")
-          string(REPLACE "\n" "%0A" error_message "${error_message}")
-          message("::error::${error_message}")
-          message(FATAL_ERROR "Build failed")
-        endif()
+        cmake --build build --config $BUILD_TYPE -j 16 || { \
+          echo "Build failed"; exit 1; \
+        }
 
     - if: ${{always() }}
       name: Print CMakeTests logs
