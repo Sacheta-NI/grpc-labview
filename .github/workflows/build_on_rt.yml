@@ -10,8 +10,8 @@ env:
 
 jobs:
   build-nilrt:
-    name: NILRT Cross Compile with GCC 6.3.0
-    runs-on: ubuntu-22.04
+    name: NILRT Cross Compile with GCC 10
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout Repo
@@ -26,10 +26,12 @@ jobs:
     # improvements to hosting and exports of the NILRT toolchain are made.
     - name: Install NI Linux RT CC Toolchain
       run: |
-        wget -nv https://download.ni.com/support/softlib/labview/labview_rt/2018/Linux%20Toolchains/linux/oecore-x86_64-core2-64-toolchain-6.0.sh
-        sudo chmod a+x ./oecore-x86_64-core2-64-toolchain-6.0.sh
-        sudo ./oecore-x86_64-core2-64-toolchain-6.0.sh -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
-        echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> ${GITHUB_PATH}
+        sudo apt-get update
+        sudo apt-get install -y coreutils
+        wget https://download.ni.com/support/softlib/labview/labview_rt/2018/Linux%20Toolchains/linux/oecore-x86_64-core2-64-toolchain-6.0.sh
+        stdbuf -oL -eL bash oecore-x86_64-core2-64-toolchain-6.0.sh > output.log 2>&1 || (echo "Retrying..." && stdbuf -oL -eL bash oecore-x86_64-core2-64-toolchain-6.0.sh > output.log 2>&1)
+        tail -f output.log
+        
     - name: Install GCC 10
       run: |
        sudo apt-get update
