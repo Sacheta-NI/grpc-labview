@@ -26,11 +26,12 @@ jobs:
         # Clone the repository and initialize submodules
         git clone https://github.com/ni/nilrt.git
         cd nilrt
-        git checkout RELEASE_NILRT_2022Q4
+        git checkout nilrt/master/scarthgap
         git submodule update --init --recursive
 
         # Build the Docker image for NILRT build
         bash ./docker/create-build-nilrt.sh
+        docker images build-nilrt
 
         # Verify Docker image build
         docker images build-nilrt
@@ -38,7 +39,7 @@ jobs:
         # Build the toolchain from source
         ls scripts/pipelines
 
-        bash ./scripts/pipelines/build.core-feeds.sh || exit 1
+        bash ./sscripts/pipelines/build.toolchain.sh || exit 1
         ls scripts/pipelines
         # Locate and run the toolchain installer
         TOOLCHAIN_INSTALLER=$(find tmp-glibc/deploy/sdk -name "oecore-*.sh")
