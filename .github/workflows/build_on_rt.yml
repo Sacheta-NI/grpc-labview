@@ -38,6 +38,7 @@ jobs:
       run: |
         ls
         cd nilrt
+        ls
         NI_ORG_FLAG=""
         if ping -c 1 ni.internal.corp > /dev/null 2>&1; then
           echo "NI Corporate Network detected. Using ni-org.conf."
