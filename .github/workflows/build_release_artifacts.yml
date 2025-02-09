@@ -7,7 +7,7 @@ on:
 jobs:
   build_release_artifacts:
     name: Download and Build artifacts
-    runs-on: self-hosted
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
