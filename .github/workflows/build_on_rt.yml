@@ -36,13 +36,16 @@ jobs:
         
     - name: Initialize Build Environment
       run: |
-        cd nilrt
-        source ./ni-oe-init-build-env || exit 1
+        NI_ORG_FLAG=""
+        if ping -c 1 ni.internal.corp > /dev/null 2>&1; then
+          echo "NI Corporate Network detected. Using ni-org.conf."
+          cp conf/snippets/ni-org.conf conf/local.conf || exit 1
+        fi
+        source ./ni-oe-init-build-env $NI_ORG_FLAG || exit 1
         echo "Environment initialized"
 
     - name: Build the Toolchain
       run: |
-        source ./ni-oe-init-build-env || exit 1
         bitbake --version
         bitbake meta-toolchain || exit 1
 
