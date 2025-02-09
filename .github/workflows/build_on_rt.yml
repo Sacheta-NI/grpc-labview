@@ -37,7 +37,7 @@ jobs:
         # Build the toolchain from source
         ls scripts/pipelines
 
-        bitbake -s
+        #bitbake -s
 
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 222222222222222222222222222"
         . ./ni-oe-init-build-env [--org]
