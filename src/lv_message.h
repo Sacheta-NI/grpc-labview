@@ -22,7 +22,7 @@ namespace grpc_labview
 
         google::protobuf::UnknownFieldSet& UnknownFields();
 
-        Message* New(google::protobuf::Arena* arena) const override;
+        Message* New(google::protobuf::Arena* arena) const;
         void SharedCtor();
         void SharedDtor();
         void ArenaDtor(void* object);
@@ -30,7 +30,6 @@ namespace grpc_labview
 
         void Clear()  final;
         bool IsInitialized() const;
-        const google::protobuf::MessageLite::ClassData* GetClassData() const override;
         const char* _InternalParse(const char* ptr, google::protobuf::internal::ParseContext* ctx);
         google::protobuf::uint8* _InternalSerialize(google::protobuf::uint8* target, google::protobuf::io::EpsCopyOutputStream* stream) const override final;
         void SetCachedSize(int size) const;

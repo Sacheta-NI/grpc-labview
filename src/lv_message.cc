@@ -597,14 +597,6 @@ namespace grpc_labview
 
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
-    const google::protobuf::MessageLite::ClassData* LVMessage::GetClassData() const {
-        // Minimal or placeholder implementation:
-        return nullptr;
-    }
-
-
-    //---------------------------------------------------------------------
-    //---------------------------------------------------------------------
     void LVMessage::SharedCtor()
     {
         assert(false); // not expected to be called
