@@ -41,7 +41,7 @@ jobs:
           echo "NI Corporate Network detected. Using ni-org.conf."
           cp conf/snippets/ni-org.conf conf/local.conf || exit 1
         fi
-        source ./ni-oe-init-build-env $NI_ORG_FLAG || exit 1
+        . ./ni-oe-init-build-env $NI_ORG_FLAG || exit 1
         echo "Environment initialized"
 
     - name: Build the Toolchain
