@@ -19,8 +19,6 @@ jobs:
     uses: ./.github/workflows/windows_x86_build.yml
   build_linux:
     uses: ./.github/workflows/build_on_linux.yml
-  build_linux_rt:
-    uses: ./.github/workflows/build_on_rt.yml
   
   build_release_arifacts:
     if: ${{ github.repository == 'ni/grpc-labview' || github.event.pull_request.head.repo.full_name == 'ni/grpc-labview' }}
@@ -28,5 +26,4 @@ jobs:
       - build_windows_x64
       - build_windows_x86
       - build_linux
-      - build_linux_rt
     uses: ./.github/workflows/build_release_artifacts.yml
