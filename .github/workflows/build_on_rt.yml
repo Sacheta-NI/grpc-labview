@@ -29,6 +29,8 @@ jobs:
         cd nilrt
         git checkout RELEASE_NILRT_2022Q4
         git submodule update --init --recursive
+        bash --version
+
         bash ./scripts/pipelines/build.toolchain.sh
         TOOLCHAIN_INSTALLER=$(ls $PWD/tmp-glibc/deploy/sdk/oecore-*.sh)
         chmod +x "$TOOLCHAIN_INSTALLER"
