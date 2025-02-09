@@ -17,76 +17,45 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v4
 
-    - name: Setup python3
+    - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'
-    - name: Build and Install NI Linux RT CC Toolchain
+
+    - name: Verify Docker
+      run: docker run hello-world
+
+    - name: Clone NILRT and Build Docker Image
       run: |
-        # Clone the repository and initialize submodules
         git clone https://github.com/ni/nilrt.git
         cd nilrt
         git checkout nilrt/master/scarthgap
         git submodule update --init --recursive
-        docker run hello-world
-        # Build the Docker image for NILRT build
-        bash ./docker/create-build-nilrt.sh  # will tag the image as build-nilrt:${NILRT_codename}
+        bash ./docker/create-build-nilrt.sh
+        docker images | grep build-nilrt || echo "Docker image creation failed"
+        
+    - name: Initialize Build Environment
+      run: |
+        cd nilrt
+        source ./ni-oe-init-build-env || exit 1
+        echo "Environment initialized"
 
-        docker images build-nilrt
-        echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 111111111111111111111"
-        # Build the toolchain from source
-        ls scripts/pipelines
+    - name: Build the Toolchain
+      run: |
+        source ./ni-oe-init-build-env || exit 1
+        bitbake --version
+        bitbake meta-toolchain || exit 1
 
-        #bitbake -s
-
-        echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 222222222222222222222222222"
-        . ./ni-oe-init-build-env [--org]
-
-        # Verification
-        bitbake --version  # If this succeeds, you're done.
-        #bitbake -s
-        echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333.00000000000000000000000000000"
-       
-        bitbake meta-toolchain
-        echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333"
-       
-        ls scripts/pipelines
-        # Locate and run the toolchain installer
+    - name: Install the Toolchain
+      run: |
         TOOLCHAIN_INSTALLER=$(find tmp-glibc/deploy/sdk -name "oecore-*.sh")
         if [ ! -f "$TOOLCHAIN_INSTALLER" ]; then
           echo "Toolchain installer not found in the expected path."
           exit 1
         fi
-
-        # Make the toolchain installer executable and install it
         chmod +x "$TOOLCHAIN_INSTALLER"
         sudo "$TOOLCHAIN_INSTALLER" -y -d "${GITHUB_WORKSPACE}/nilrt-toolchain/"
-
-        # Update the system path with the installed toolchain
         echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> "${GITHUB_PATH}"
-               
-    - name: Build and Install NI Linux RT CC Toolchain
-      run: |
-        # Build the toolchain from source to ensure GCC 7+ compatibility
-        git clone https://github.com/ni/nilrt.git
-        cd nilrt
-        git checkout RELEASE_NILRT_2022Q4
-        git submodule update --init --recursive
-        bash --version
-        pwd
-        ls
-        cd scripts
-        ls
-        cd pipelines
-        ls
-
-        bash ./scripts/pipelines/build.toolchain.sh
-        TOOLCHAIN_INSTALLER=$(ls $PWD/tmp-glibc/deploy/sdk/oecore-*.sh)
-        chmod +x "$TOOLCHAIN_INSTALLER"
-        sudo "$TOOLCHAIN_INSTALLER" -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
-        echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> ${GITHUB_PATH}
-
-
 
     - name: Update Submodules
       id: submodules
@@ -103,105 +72,21 @@ jobs:
         path: third_party/grpc/build/
         key: ${{ github.repository }}-${{ runner.os }}-${{ env.cache-name }}-${{ steps.submodules.outputs.grpc-commit }}
 
-    - name: Configure Host OS gRPC Support
-      if: steps.hostgrpccache.outputs.cache-hit != 'true'
-      shell: cmake -P {0}
+    - name: Build gRPC and Install
       run: |
-        set(path_separator ":")
-        set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
-        execute_process(
-          COMMAND cmake
-            -S $ENV{GITHUB_WORKSPACE}/third_party/grpc/
-            -B $ENV{GITHUB_WORKSPACE}/third_party/grpc/build
-            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-            -D gRPC_INSTALL=ON
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
-
-    - name: Build Host OS gRPC Support
-      if: steps.hostgrpccache.outputs.cache-hit != 'true'
-      shell: cmake -P {0}
-      run: |
-        execute_process(
-          COMMAND cmake --build $ENV{GITHUB_WORKSPACE}/third_party/grpc/build
-          RESULT_VARIABLE result
-          OUTPUT_VARIABLE output
-          ERROR_VARIABLE output
-          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
-        )
-        if (NOT result EQUAL 0)
-          string(REGEX MATCH "FAILED:.*$" error_message "${output}")
-          string(REPLACE "\n" "%0A" error_message "${error_message}")
-          message("::error::${error_message}")
-          message(FATAL_ERROR "Build failed")
-        endif()
-
-    - name: Install Host OS gRPC Support
-      run: sudo cmake --install ${GITHUB_WORKSPACE}/third_party/grpc/build
+        cmake -S third_party/grpc -B third_party/grpc/build -D CMAKE_BUILD_TYPE=$BUILD_TYPE -D gRPC_INSTALL=ON
+        cmake --build third_party/grpc/build
+        sudo cmake --install third_party/grpc/build
 
     - name: Configure Cross Compile
-      shell: cmake -P {0}
       run: |
-        set(path_separator ":")
-        set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
-        execute_process(
-          COMMAND cmake
-            -S .
-            -B build
-            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
-            -D CMAKE_TOOLCHAIN_FILE=$ENV{GITHUB_WORKSPACE}/nilrt-x86_64.cmake
-          RESULT_VARIABLE result
-        )
-        if (NOT result EQUAL 0)
-          message(FATAL_ERROR "Bad exit status")
-        endif()
+        cmake -S . -B build -D CMAKE_BUILD_TYPE=$BUILD_TYPE -D CMAKE_TOOLCHAIN_FILE=${GITHUB_WORKSPACE}/nilrt-x86_64.cmake
 
     - name: Cross Compile
-      shell: cmake -P {0}
-      run: |
-        execute_process(
-          COMMAND cmake --build build --config $ENV{BUILD_TYPE} -j 16
-          RESULT_VARIABLE result
-          OUTPUT_VARIABLE output
-          ERROR_VARIABLE output
-          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
-        )
-        if (NOT result EQUAL 0)
-          string(REGEX MATCH "FAILED:.*$" error_message "${output}")
-          string(REPLACE "\n" "%0A" error_message "${error_message}")
-          message("::error::${error_message}")
-          message(FATAL_ERROR "Build failed")
-        endif()
-
-    - if: ${{always() }}
-      name: Print CMakeTests logs
-      run: |
-        folder="${{runner.workspace}}/grpc-labview/tests/CMakeTests/logs/"
-
-        # Check if the folder exists
-        if [ ! -d "$folder" ]; then
-          echo "CMakeTests log folder (grpc-labview/tests/CmakeTests/logs) does not exist."
-          echo "Exiting the script."
-          exit
-        fi
-
-        # Change to the folder
-        cd "$folder" || exit
-
-        # Iterate through files and print their contents
-        for file in *; do
-            if [ -f "$file" ]; then
-                cat "$file"
-                echo
-            fi
-        done
+      run: cmake --build build --config $BUILD_TYPE -j 16
 
     - name: Tar Build Artifacts
-      run: >-
-        tar -czvf liblabview-grpc-server-rt.tar.gz -C ${GITHUB_WORKSPACE}/build liblabview_grpc_server.so
+      run: tar -czvf liblabview-grpc-server-rt.tar.gz -C build liblabview_grpc_server.so
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
