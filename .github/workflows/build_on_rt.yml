@@ -37,7 +37,7 @@ jobs:
         ls scripts/pipelines
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 222222222222222222222222222"
        
-        bash ./sscripts/pipelines/build.toolchain.sh || exit 1
+        bash ./scripts/pipelines/build.toolchain.sh || exit 1
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333"
        
         ls scripts/pipelines
