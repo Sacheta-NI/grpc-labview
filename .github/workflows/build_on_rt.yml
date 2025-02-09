@@ -36,6 +36,8 @@ jobs:
         docker images build-nilrt
 
         # Build the toolchain from source
+        ls scripts/pipelines
+
         bash ./scripts/pipelines/build.toolchain.sh || exit 1
 
         # Locate and run the toolchain installer
