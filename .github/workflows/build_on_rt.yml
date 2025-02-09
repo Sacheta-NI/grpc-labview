@@ -10,8 +10,8 @@ env:
 
 jobs:
   build-nilrt:
-    name: NILRT Cross Compile with GCC 10
-    runs-on: ubuntu-latest
+    name: NILRT Cross Compile with GCC 6.3.0
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout Repo
@@ -26,12 +26,11 @@ jobs:
     # improvements to hosting and exports of the NILRT toolchain are made.
     - name: Install NI Linux RT CC Toolchain
       run: |
-        sudo apt-get update
-        sudo apt-get install -y coreutils
-        wget https://download.ni.com/support/softlib/labview/labview_rt/2018/Linux%20Toolchains/linux/oecore-x86_64-core2-64-toolchain-6.0.sh
-        stdbuf -oL -eL bash oecore-x86_64-core2-64-toolchain-6.0.sh > output.log 2>&1 || (echo "Retrying..." && stdbuf -oL -eL bash oecore-x86_64-core2-64-toolchain-6.0.sh > output.log 2>&1)
-        tail -f output.log
-        
+        wget -nv https://download.ni.com/support/softlib/labview/labview_rt/2018/Linux%20Toolchains/linux/oecore-x86_64-core2-64-toolchain-6.0.sh
+        sudo chmod a+x ./oecore-x86_64-core2-64-toolchain-6.0.sh
+        sudo ./oecore-x86_64-core2-64-toolchain-6.0.sh -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
+        echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> ${GITHUB_PATH}
+
     - name: Install GCC 10
       run: |
        sudo apt-get update
@@ -56,33 +55,76 @@ jobs:
 
     - name: Configure Host OS gRPC Support
       if: steps.hostgrpccache.outputs.cache-hit != 'true'
+      shell: cmake -P {0}
       run: |
-        cmake -S $GITHUB_WORKSPACE/third_party/grpc/ \
-              -B $GITHUB_WORKSPACE/third_party/grpc/build \
-              -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
-              -D gRPC_INSTALL=ON
+        set(path_separator ":")
+        set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
+        execute_process(
+          COMMAND cmake
+            -S $ENV{GITHUB_WORKSPACE}/third_party/grpc/
+            -B $ENV{GITHUB_WORKSPACE}/third_party/grpc/build
+            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
+            -D gRPC_INSTALL=ON
+          RESULT_VARIABLE result
+        )
+        if (NOT result EQUAL 0)
+          message(FATAL_ERROR "Bad exit status")
+        endif()
 
     - name: Build Host OS gRPC Support
       if: steps.hostgrpccache.outputs.cache-hit != 'true'
+      shell: cmake -P {0}
       run: |
-        cmake --build $GITHUB_WORKSPACE/third_party/grpc/build || { \
-          echo "Build failed"; exit 1; \
-        }
+        execute_process(
+          COMMAND cmake --build $ENV{GITHUB_WORKSPACE}/third_party/grpc/build
+          RESULT_VARIABLE result
+          OUTPUT_VARIABLE output
+          ERROR_VARIABLE output
+          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
+        )
+        if (NOT result EQUAL 0)
+          string(REGEX MATCH "FAILED:.*$" error_message "${output}")
+          string(REPLACE "\n" "%0A" error_message "${error_message}")
+          message("::error::${error_message}")
+          message(FATAL_ERROR "Build failed")
+        endif()
 
     - name: Install Host OS gRPC Support
       run: sudo cmake --install ${GITHUB_WORKSPACE}/third_party/grpc/build
 
     - name: Configure Cross Compile
+      shell: cmake -P {0}
       run: |
-        cmake -S . -B build \
-              -D CMAKE_BUILD_TYPE=$BUILD_TYPE \
-              -D CMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/nilrt-x86_64.cmake
+        set(path_separator ":")
+        set(ENV{PATH} "$ENV{GITHUB_WORKSPACE}${path_separator}$ENV{PATH}")
+        execute_process(
+          COMMAND cmake
+            -S .
+            -B build
+            -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
+            -D CMAKE_TOOLCHAIN_FILE=$ENV{GITHUB_WORKSPACE}/nilrt-x86_64.cmake
+          RESULT_VARIABLE result
+        )
+        if (NOT result EQUAL 0)
+          message(FATAL_ERROR "Bad exit status")
+        endif()
 
     - name: Cross Compile
+      shell: cmake -P {0}
       run: |
-        cmake --build build --config $BUILD_TYPE -j 16 || { \
-          echo "Build failed"; exit 1; \
-        }
+        execute_process(
+          COMMAND cmake --build build --config $ENV{BUILD_TYPE} -j 16
+          RESULT_VARIABLE result
+          OUTPUT_VARIABLE output
+          ERROR_VARIABLE output
+          ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
+        )
+        if (NOT result EQUAL 0)
+          string(REGEX MATCH "FAILED:.*$" error_message "${output}")
+          string(REPLACE "\n" "%0A" error_message "${error_message}")
+          message("::error::${error_message}")
+          message(FATAL_ERROR "Build failed")
+        endif()
 
     - if: ${{always() }}
       name: Print CMakeTests logs
