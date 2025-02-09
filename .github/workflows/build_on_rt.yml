@@ -37,7 +37,7 @@ jobs:
     - name: Initialize Build Environment and Build the Toolchain
       run: |
         cd nilrt
-        source ./ni-oe-init-build-env --org || exit 1
+        source ./ni-oe-init-build-env || exit 1
         echo "Environment initialized"
         echo 'NILRT_MAIN_FEED_VERSION = "2022Q3"' >> ./conf/local.conf
 
