@@ -21,7 +21,37 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.x'
+    - name: Build and Install NI Linux RT CC Toolchain
+      run: |
+        # Clone the repository and initialize submodules
+        git clone https://github.com/ni/nilrt.git
+        cd nilrt
+        git checkout RELEASE_NILRT_2022Q4
+        git submodule update --init --recursive
 
+        # Build the Docker image for NILRT build
+        bash ./docker/create-build-nilrt.sh
+
+        # Verify Docker image build
+        docker images build-nilrt
+
+        # Build the toolchain from source
+        bash ./scripts/pipelines/build.toolchain.sh || exit 1
+
+        # Locate and run the toolchain installer
+        TOOLCHAIN_INSTALLER=$(find tmp-glibc/deploy/sdk -name "oecore-*.sh")
+        if [ ! -f "$TOOLCHAIN_INSTALLER" ]; then
+          echo "Toolchain installer not found in the expected path."
+          exit 1
+        fi
+
+        # Make the toolchain installer executable and install it
+        chmod +x "$TOOLCHAIN_INSTALLER"
+        sudo "$TOOLCHAIN_INSTALLER" -y -d "${GITHUB_WORKSPACE}/nilrt-toolchain/"
+
+        # Update the system path with the installed toolchain
+        echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> "${GITHUB_PATH}"
+               
     - name: Build and Install NI Linux RT CC Toolchain
       run: |
         # Build the toolchain from source to ensure GCC 7+ compatibility
