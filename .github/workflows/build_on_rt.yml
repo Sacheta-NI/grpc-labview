@@ -37,7 +37,10 @@ jobs:
         # Build the toolchain from source
         ls scripts/pipelines
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 222222222222222222222222222"
-        source ./ni-oe-init-build-env
+        . ./ni-oe-init-build-env [--org]
+
+        # Verification
+        bitbake --version  # If this succeeds, you're done.
 
         SCRIPT_ROOT=$(realpath $(dirname $BASH_SOURCE))
 
