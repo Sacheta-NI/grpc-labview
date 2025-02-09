@@ -30,6 +30,12 @@ jobs:
         git checkout RELEASE_NILRT_2022Q4
         git submodule update --init --recursive
         bash --version
+        pwd
+        ls
+        cd scripts
+        ls
+        cd pipelines
+        ls
 
         bash ./scripts/pipelines/build.toolchain.sh
         TOOLCHAIN_INSTALLER=$(ls $PWD/tmp-glibc/deploy/sdk/oecore-*.sh)
