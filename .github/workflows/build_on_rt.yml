@@ -36,15 +36,18 @@ jobs:
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 111111111111111111111"
         # Build the toolchain from source
         ls scripts/pipelines
+
+        bitbake -s
+
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 222222222222222222222222222"
         . ./ni-oe-init-build-env [--org]
 
         # Verification
         bitbake --version  # If this succeeds, you're done.
-        bitbake -s
+        #bitbake -s
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333.00000000000000000000000000000"
        
-        bash ../scripts/pipelines/build.toolchain.sh
+        bitbake meta-toolchain
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333"
        
         ls scripts/pipelines
