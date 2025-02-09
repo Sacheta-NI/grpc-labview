@@ -49,6 +49,7 @@ jobs:
 
     - name: Build the Toolchain
       run: |
+        cd nilrt
         bitbake --version
         bitbake meta-toolchain || exit 1
 
