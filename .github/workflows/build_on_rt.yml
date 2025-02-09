@@ -37,7 +37,12 @@ jobs:
         ls scripts/pipelines
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 222222222222222222222222222"
        
-        bash ./scripts/pipelines/build.toolchain.sh || exit 1
+        SCRIPT_ROOT=$(realpath $(dirname $BASH_SOURCE))
+
+        . "${SCRIPT_ROOT}/build.common.sh" "$@"
+
+        echo "INFO: Building meta-toolchain"
+        bitbake meta-toolchain
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333"
        
         ls scripts/pipelines
