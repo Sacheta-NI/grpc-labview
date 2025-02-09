@@ -42,12 +42,7 @@ jobs:
         # Verification
         bitbake --version  # If this succeeds, you're done.
 
-        SCRIPT_ROOT=$(realpath $(dirname $BASH_SOURCE))
-
-        . "${SCRIPT_ROOT}/build.common.sh" "$@"
-
-        echo "INFO: Building meta-toolchain"
-        bitbake meta-toolchain
+        bash ../scripts/pipelines/build.toolchain.sh
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 3333333333333333333333333"
        
         ls scripts/pipelines
