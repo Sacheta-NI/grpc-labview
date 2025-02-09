@@ -28,7 +28,7 @@ jobs:
         cd nilrt
         git checkout nilrt/master/scarthgap
         git submodule update --init --recursive
-
+        docker run hello-world
         # Build the Docker image for NILRT build
         #bash ./docker/create-build-nilrt.sh
         docker images build-nilrt
