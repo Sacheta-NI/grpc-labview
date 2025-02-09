@@ -30,7 +30,8 @@ jobs:
         git submodule update --init --recursive
         docker run hello-world
         # Build the Docker image for NILRT build
-        #bash ./docker/create-build-nilrt.sh
+        bash ./docker/create-build-nilrt.sh  # will tag the image as build-nilrt:${NILRT_codename}
+
         docker images build-nilrt
         echo "SSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 111111111111111111111"
         # Build the toolchain from source
