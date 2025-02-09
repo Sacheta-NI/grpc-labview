@@ -42,8 +42,10 @@ jobs:
         NI_ORG_FLAG=""
         echo "NI Corporate Network detected. Using ni-org.conf."
         cp conf/snippets/ni-org.conf conf/local.conf || exit 1
-        source ./ni-oe-init-build-env $NI_ORG_FLAG || exit 1
+        source ./ni-oe-init-build-env --org || exit 1
         echo "Environment initialized"
+        echo 'NILRT_MAIN_FEED_VERSION = "2022Q3"' >> ./conf/local.conf
+
         bitbake --version
         bitbake meta-toolchain || exit 1
 
