@@ -29,11 +29,12 @@ jobs:
         cd nilrt
         git checkout RELEASE_NILRT_2022Q4
         git submodule update --init --recursive
-        bash ../scripts/pipelines/build.toolchain.sh
+        bash scripts/pipelines/build.toolchain.sh
         TOOLCHAIN_INSTALLER=$(ls $PWD/tmp-glibc/deploy/sdk/oecore-*.sh)
         chmod +x "$TOOLCHAIN_INSTALLER"
         sudo "$TOOLCHAIN_INSTALLER" -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
         echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> ${GITHUB_PATH}
+
 
 
     - name: Update Submodules
