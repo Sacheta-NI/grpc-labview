@@ -8,19 +8,19 @@ set(_GRPC_DEVICE_NILRT_LEGACY_TOOLCHAIN TRUE)
 #---------------------------------------------------------------------- 
 # Path variables for toolchains 
 #---------------------------------------------------------------------- 
-find_program(COMPILER_PATH x86_64-nilrt-linux-gcc-10)
+find_program(COMPILER_PATH x86_64-nilrt-linux-gcc-7)
 if (NOT COMPILER_PATH)
-    message(FATAL_ERROR "x86_64-nilrt-linux-gcc-10 not found. Ensure the toolchain is correctly installed.")
+    message(FATAL_ERROR "x86_64-nilrt-linux-gcc-7 not found. Ensure the toolchain is correctly installed.")
 endif()
 get_filename_component(toolchain_path ${COMPILER_PATH}/../../../../.. REALPATH DIRECTORY)
 
-set(include_path core2-64-nilrt-linux/usr/include/c++/10)
+set(include_path core2-64-nilrt-linux/usr/include/c++/7)
 
 #---------------------------------------------------------------------- 
 # Compilers 
 #---------------------------------------------------------------------- 
-set(CMAKE_C_COMPILER x86_64-nilrt-linux-gcc-10)
-set(CMAKE_CXX_COMPILER x86_64-nilrt-linux-g++-10)
+set(CMAKE_C_COMPILER x86_64-nilrt-linux-gcc-7)
+set(CMAKE_CXX_COMPILER x86_64-nilrt-linux-g++-7)
 
 #---------------------------------------------------------------------- 
 # Default compiler flags 

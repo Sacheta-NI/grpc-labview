@@ -10,7 +10,7 @@ env:
 
 jobs:
   build-nilrt:
-    name: NILRT Cross Compile with GCC 6.3.0
+    name: NILRT Cross Compile with GCC 7+
     runs-on: ubuntu-22.04
 
     steps:
@@ -22,21 +22,18 @@ jobs:
       with:
         python-version: '3.x'
 
-    # The URL used to download this toolchain may change in the future as
-    # improvements to hosting and exports of the NILRT toolchain are made.
-    - name: Install NI Linux RT CC Toolchain
+    - name: Build and Install NI Linux RT CC Toolchain
       run: |
-        wget -nv https://download.ni.com/support/softlib/labview/labview_rt/2018/Linux%20Toolchains/linux/oecore-x86_64-core2-64-toolchain-6.0.sh
-        sudo chmod a+x ./oecore-x86_64-core2-64-toolchain-6.0.sh
-        sudo ./oecore-x86_64-core2-64-toolchain-6.0.sh -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
+        # Build the toolchain from source to ensure GCC 7+ compatibility
+        git clone https://github.com/ni/nilrt.git
+        cd nilrt
+        git checkout nilrt/master/scarthgap
+        git submodule update --init --recursive
+        bash ../scripts/pipelines/build.toolchain.sh
+        TOOLCHAIN_INSTALLER=$(ls $PWD/tmp-glibc/deploy/sdk/oecore-*.sh)
+        chmod +x "$TOOLCHAIN_INSTALLER"
+        sudo "$TOOLCHAIN_INSTALLER" -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
         echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> ${GITHUB_PATH}
-
-    - name: Install GCC 10
-      run: |
-       sudo apt-get update
-       sudo apt-get install -y gcc-10 g++-10
-       sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-       gcc --version
 
     - name: Update Submodules
       id: submodules
