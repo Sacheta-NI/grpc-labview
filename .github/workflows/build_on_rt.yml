@@ -32,8 +32,9 @@ jobs:
     - name: Debug Environment Variables
       run: |
         echo "PATH: $PATH"
-        echo "Toolchain directory content 3:"
-        ls -R "$core2-64-nilrt-linux/usr/include/c++"
+        echo "Toolchain directory content:"
+        ls -R "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/include/c++"
+        
 
     - name: Check for Toolchain Binary
       run: |
