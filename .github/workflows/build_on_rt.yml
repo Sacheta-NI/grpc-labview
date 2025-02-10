@@ -22,14 +22,27 @@ jobs:
       with:
         python-version: '3.x'
 
-    # The URL used to download this toolchain may change in the future as
-    # improvements to hosting and exports of the NILRT toolchain are made.
     - name: Install NI Linux RT CC Toolchain
       run: |
         wget -nv https://download.ni.com/support/softlib/labview/labview_rt/2023Q4/LinuxToolchains/linux/oecore-x86_64-core2-64-toolchain-10.0.sh
         sudo chmod a+x ./oecore-x86_64-core2-64-toolchain-10.0.sh
         sudo ./oecore-x86_64-core2-64-toolchain-10.0.sh -y -d ${GITHUB_WORKSPACE}/nilrt-toolchain/
         echo "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/x86_64-nilrt-linux" >> ${GITHUB_PATH}
+
+    - name: Debug Environment Variables
+      run: |
+        echo "PATH: $PATH"
+        echo "Toolchain directory content:"
+        ls -R "${GITHUB_WORKSPACE}/nilrt-toolchain/sysroots/x86_64-nilrtsdk-linux/usr/bin/"
+
+    - name: Check for Toolchain Binary
+      run: |
+        if [ -x "$(command -v x86_64-nilrt-linux-gcc)" ]; then
+          echo "Toolchain compiler found: $(which x86_64-nilrt-linux-gcc)"
+        else
+          echo "::error::x86_64-nilrt-linux-gcc not found in PATH"
+          exit 1
+        fi
 
     - name: Update Submodules
       id: submodules
@@ -97,7 +110,10 @@ jobs:
             -D CMAKE_BUILD_TYPE=$ENV{BUILD_TYPE}
             -D CMAKE_TOOLCHAIN_FILE=$ENV{GITHUB_WORKSPACE}/nilrt-x86_64.cmake
           RESULT_VARIABLE result
+          OUTPUT_VARIABLE output
+          ERROR_VARIABLE output
         )
+        message("::info::${output}")
         if (NOT result EQUAL 0)
           message(FATAL_ERROR "Bad exit status")
         endif()
