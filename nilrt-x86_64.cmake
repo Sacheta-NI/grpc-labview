@@ -14,6 +14,18 @@ if (NOT COMPILER_PATH)
 endif()
 get_filename_component(toolchain_path ${COMPILER_PATH}/../../../../.. REALPATH DIRECTORY)
 
+TOOLCHAIN := $(shell which x86_64-nilrt-linux-gcc)
+
+# Check if the toolchain is available
+ifeq ($(TOOLCHAIN),)
+$(error "Error: x86_64-nilrt-linux-gcc not found. Please ensure the toolchain is installed and in the PATH.")
+endif
+
+all:
+	@echo "Using toolchain: $(TOOLCHAIN)"
+	# Your build commands go here
+
+ls core2-64-nilrt-linux/usr/include/c++
 set(include_path core2-64-nilrt-linux/usr/include/c++/10)
 
 #---------------------------------------------------------------------- 
