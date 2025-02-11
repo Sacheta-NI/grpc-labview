@@ -7,50 +7,38 @@ on:
 jobs:
   build_release_artifacts:
     name: Download and Build artifacts
-    runs-on: windows-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Step: Checkout completed."
 
       - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-      - run: echo "Step: Python setup completed."
 
       - uses: actions/download-artifact@v4
         id: download_artifacts
         with:
           path: ${{ runner.temp }}\grpc-labview-artifacts
-      - run: echo "Step: Artifacts downloaded to ${{ runner.temp }}\\grpc-labview-artifacts."
 
       - name: Stage Artifacts
-        run: |
-          echo "Running stage_artifacts.py..."
-          python ${{ runner.workspace }}\grpc-labview\build-it\stage_artifacts.py --downloaded_path ${{ steps.download_artifacts.outputs.download-path }} --staging_path ${{ runner.temp }}\grpc-labview-staged-artifacts
+        run: python ${{runner.workspace}}\grpc-labview\build-it\stage_artifacts.py --downloaded_path ${{ steps.download_artifacts.outputs.download-path }} --staging_path ${{ runner.temp }}\grpc-labview-staged-artifacts
 
       - if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         name: Build VI Packages for Testing
-        run: |
-          echo "Building VI Packages for Testing..."
-          python ${{ runner.workspace }}\grpc-labview\build-it\build.py --target All --pathToBinaries ${{ runner.temp }}\grpc-labview-staged-artifacts\TopLevelDlls
+        run: python ${{runner.workspace}}\grpc-labview\build-it\build.py --target All --pathToBinaries ${{ runner.temp }}\grpc-labview-staged-artifacts\TopLevelDlls
 
       - if: startsWith(github.ref, 'refs/tags/v')
-        name: Build VI Packages for Release
-        run: |
-          echo "Building VI Packages for Release..."
-          python ${{ runner.workspace }}\grpc-labview\build-it\build.py --libraryVersion ${{ github.ref_name }} --target All --pathToBinaries ${{ runner.temp }}\grpc-labview-staged-artifacts\TopLevelDlls
+        name: Build VI Packages for release
+        run: python ${{runner.workspace}}\grpc-labview\build-it\build.py --libraryVersion ${{github.ref_name}} --target All --pathToBinaries ${{ runner.temp }}\grpc-labview-staged-artifacts\TopLevelDlls
 
       - if: startsWith(github.ref, 'refs/tags/v')
         name: Zip Release Artifacts
         run: |
-          echo "Zipping release artifacts..."
-          cd "${{ runner.workspace }}/grpc-labview/labview source/Builds"
+          cd "${{runner.workspace}}/grpc-labview/labview source/Builds"
           tar -cavf grpc-labview.zip *.vip
 
       - name: Run CI Tests
-        run: |
-          echo "Running CI Tests..."
-          python ${{ runner.workspace }}\grpc-labview\tests\run_tests.py
+        run: python ${{runner.workspace}}\grpc-labview\tests\run_tests.py
 
       - name: Get current time
         uses: josStorer/get-current-time@v2.1.2
@@ -58,41 +46,43 @@ jobs:
         with:
           format: YYYY-MM-DD_hh-mm-ss
           utcOffset: "+05:30"
-      - run: echo "Step: Current time fetched - ${{ steps.current-time.outputs.formattedTime }}"
 
       - name: Run New Testing Suite's Tests
         timeout-minutes: 60
-        run: |
-          echo "Running New ATS Tests..."
-          python ${{ runner.workspace }}\grpc-labview\tests\New_ATS\pylib\run_tests.py
+        run: python ${{runner.workspace}}\grpc-labview\tests\New_ATS\pylib\run_tests.py
 
       - name: Check whether logs folder exists in New_ATS
         id: check_files
         uses: andstor/file-existence-action@v3.0.0
         with:
-          files: "${{ runner.workspace }}/grpc-labview/tests/New_ATS/logs/"
-      - run: echo "Logs folder existence: ${{ steps.check_files.outputs.files_exists }}"
+          files: "${{runner.workspace}}/grpc-labview/tests/New_ATS/logs/"
 
-      - if: ${{ always() && steps.check_files.outputs.files_exists == 'true' }}
+      - if: ${{always() && steps.check_files.outputs.files_exists == 'true' }}
         name: Download New_ATS Test Results if logs folder exists
         uses: actions/upload-artifact@v4
         with:
           name: New_ATS Test Results ${{ steps.current-time.outputs.formattedTime }}
-          path: ${{ runner.workspace }}/grpc-labview/tests/New_ATS/logs
+          path: ${{runner.workspace}}/grpc-labview/tests/New_ATS/logs
 
-      - if: ${{ always() && steps.check_files.outputs.files_exists == 'true' }}
+      - if: ${{always() && steps.check_files.outputs.files_exists == 'true' }}
         name: Show New_ATS Test Results
         run: |
-          echo "Displaying test results from logs folder..."
-          $directory = "${{ runner.workspace }}/grpc-labview/tests/New_ATS/logs"
+          $directory = "${{runner.workspace}}/grpc-labview/tests/New_ATS/logs"
+
+          # Recursively iterate through all files in subfolders
           Get-ChildItem -Path $directory -File -Recurse | Group-Object Directory | ForEach-Object {
               $subfolderName = $_.Name
+
               Write-Host "Folder: $subfolderName"
+
               $_.Group | ForEach-Object {
                   $file = $_
                   Write-Host "Filename: $($file.Name)"
                   Write-Host "Contents:"
+
+                  # Print the content of the file
                   Get-Content $file.FullName
+
                   Write-Host ""
               }
               Write-Host ""
@@ -108,7 +98,6 @@ jobs:
           tag_name: ${{ github.ref }}
           name: Verison ${{ github.ref }}
           draft: true
-      - run: echo "Step: Draft release created."
 
       - if: startsWith(github.ref, 'refs/tags/v')
         name: Upload Release Artifacts to Draft Release
@@ -117,7 +106,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ runner.workspace }}/grpc-labview/labview source/Builds/grpc-labview.zip
+          asset_path: ${{runner.workspace}}/grpc-labview/labview source/Builds/grpc-labview.zip
           asset_name: grpc-labview.zip
           asset_content_type: application/zip
-      - run: echo "Step: Release artifacts uploaded."
