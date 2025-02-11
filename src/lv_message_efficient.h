@@ -91,7 +91,7 @@ namespace grpc_labview
         LVMessageEfficient(std::shared_ptr<MessageMetadata> metadata) : LVMessage(metadata) {}
         ~LVMessageEfficient() {}
 
-        Message* New(google::protobuf::Arena* arena) const override;
+        Message* New(google::protobuf::Arena* arena) const;
         void PostInteralParseAction() override;
 
     protected:

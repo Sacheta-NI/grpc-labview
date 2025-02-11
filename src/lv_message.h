@@ -57,7 +57,7 @@ namespace grpc_labview
 
         std::map<int, std::shared_ptr<LVMessageValue>> _values;
         std::shared_ptr<MessageMetadata> _metadata;
-
+        const google::protobuf::internal::ClassData* GetClassData() const override;
     protected:
         mutable google::protobuf::internal::CachedSize _cached_size_;
         google::protobuf::UnknownFieldSet _unknownFields;
