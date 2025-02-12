@@ -3,7 +3,7 @@
 #include <grpc_server.h>
 #include <lv_message.h>
 #include <sstream>
-
+#include <lv_message_efficient.h>
 //---------------------------------------------------------------------
 //---------------------------------------------------------------------
 using namespace google::protobuf::internal;
@@ -88,7 +88,7 @@ namespace grpc_labview
 
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
-    const char *LVMessage::_InternalParse(const char *ptr, ParseContext *ctx)
+    const char *LVMessage::_InternalParse(const char *ptr, google::protobuf::internal::ParseContext *ctx)
     {
         assert(ptr != nullptr);
         while (!ctx->Done(&ptr))
@@ -354,16 +354,16 @@ namespace grpc_labview
     {
         if (fieldInfo.isRepeated)
         {
-            std::shared_ptr<LVRepeatedMessageValue<std::string>> v;
+            std::shared_ptr<LVRepeatedStringMessageValue> v;
             auto it = _values.find(index);
             if (it == _values.end())
             {
-                v = std::make_shared<LVRepeatedMessageValue<std::string>>(index);
+                v = std::make_shared<LVRepeatedStringMessageValue>(index);
                 _values.emplace(index, v);
             }
             else
             {
-                v = std::static_pointer_cast<LVRepeatedMessageValue<std::string>>((*it).second);
+                v = std::static_pointer_cast<LVRepeatedStringMessageValue>((*it).second);
             }
 
             auto tagSize = CalculateTagWireSize(tag);
@@ -712,5 +712,10 @@ namespace grpc_labview
     {
         assert(false); // not expected to be called
         return google::protobuf::Metadata();
+    }
+
+    const google::protobuf::internal::ClassData* LVMessage::GetClassData() const
+    {
+        return nullptr;
     }
 }

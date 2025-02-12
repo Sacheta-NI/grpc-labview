@@ -8,11 +8,80 @@
 #include <message_metadata.h>
 #include <google/protobuf/message.h>
 #include "lv_message.h"
+#include <type_traits>
 
 using namespace google::protobuf::internal;
 
 namespace grpc_labview
 {
+
+    inline const char* ReadBOOL(const char* ptr, bool* value) {
+        *value = static_cast<bool>(ReadVarint64(&ptr));
+        return ptr;
+    }
+
+    inline const char* ReadINT32(const char* ptr, int32_t* value) {
+        return VarintParse(ptr, reinterpret_cast<uint32_t*>(value));
+    }
+
+    inline const char* ReadUINT32(const char* ptr, uint32_t* value) {
+        return VarintParse(ptr, value);
+    }
+
+    template <typename E>
+    inline const char* ReadENUM(const char* ptr, E* value) {
+        *value = static_cast<E>(ReadVarint32(&ptr));
+        return ptr;
+    }
+
+    inline const char* ReadINT64(const char* ptr, int64_t* value) {
+        return VarintParse(ptr, reinterpret_cast<uint64_t*>(value));
+    }
+
+    inline const char* ReadUINT64(const char* ptr, uint64_t* value) {
+        return VarintParse(ptr, value);
+    }
+
+    template <typename F>
+    inline const char* ReadUnaligned(const char* ptr, F* value) {
+        *value = UnalignedLoad<F>(ptr);
+        return ptr + sizeof(F);
+    }
+
+    inline const char* ReadFLOAT(const char* ptr, float* value) {
+        return ReadUnaligned(ptr, value);
+    }
+
+    inline const char* ReadDOUBLE(const char* ptr, double* value) {
+        return ReadUnaligned(ptr, value);
+    }
+
+    inline const char* ReadSINT32(const char* ptr, int32_t* value) {
+        *value = ReadVarintZigZag32(&ptr);
+        return ptr;
+    }
+
+    inline const char* ReadSINT64(const char* ptr, int64_t* value) {
+        *value = ReadVarintZigZag64(&ptr);
+        return ptr;
+    }
+
+    inline const char* ReadFIXED32(const char* ptr, uint32_t* value) {
+        return ReadUnaligned(ptr, value);
+    }
+
+    inline const char* ReadFIXED64(const char* ptr, uint64_t* value) {
+        return ReadUnaligned(ptr, value);
+    }
+
+    inline const char* ReadSFIXED32(const char* ptr, int32_t* value) {
+        return ReadUnaligned(ptr, value);
+    }
+
+    inline const char* ReadSFIXED64(const char* ptr, int64_t* value) {
+        return ReadUnaligned(ptr, value);
+    }
+
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
     class LVMessageEfficient : public LVMessage
@@ -21,26 +90,26 @@ namespace grpc_labview
         LVMessageEfficient(std::shared_ptr<MessageMetadata> metadata, int8_t* cluster) : LVMessage(metadata), _LVClusterHandle(cluster) {}
         ~LVMessageEfficient() {}
 
-        Message* New(google::protobuf::Arena* arena) const override;
+        Message* New(google::protobuf::Arena* arena) const;
         void PostInteralParseAction() override;
         int8_t* GetLVClusterHandle() { return _LVClusterHandle; };
-
+        
     protected:
         struct RepeatedMessageValue {
             const MessageElementMetadata& _fieldInfo;
-            google::protobuf::RepeatedField<char> _buffer;
+            google::protobuf::RepeatedPtrField<std::string> _buffer;
             uint64_t _numElements = 0;
 
-            RepeatedMessageValue(const MessageElementMetadata& fieldInfo, google::protobuf::RepeatedField<char> buffer) :
+            RepeatedMessageValue(const MessageElementMetadata& fieldInfo, google::protobuf::RepeatedPtrField<std::string> buffer) :
                 _fieldInfo(fieldInfo), _buffer(buffer) {}
         };
 
         struct RepeatedStringValue {
             const MessageElementMetadata& _fieldInfo;
-            google::protobuf::RepeatedField<std::string> _repeatedString;
+            google::protobuf::RepeatedPtrField<std::string> _repeatedString;
 
             RepeatedStringValue(const MessageElementMetadata& fieldInfo) :
-                _fieldInfo(fieldInfo), _repeatedString(google::protobuf::RepeatedField<std::string>()) {}
+                _fieldInfo(fieldInfo), _repeatedString(google::protobuf::RepeatedPtrField<std::string>()) {}
         };
 
     public:
@@ -86,7 +155,7 @@ namespace grpc_labview
         const char* ParseAndCopyRepeatedMessage(const char* ptr, ParseContext* ctx, RepeatedMessageValuePointer v) {
 
             uint64_t numElements;
-            ptr = PackedMessageType(ptr, ctx, reinterpret_cast<google::protobuf::RepeatedField<MessageType>*>(&(v->_value)));
+            ptr = PackedMessageType(ptr, ctx, reinterpret_cast<google::protobuf::RepeatedPtrField<MessageType>*>(&(v->_value)));
             numElements = v->_value.size();
             // get the LVClusterHandle
 
@@ -107,7 +176,7 @@ namespace grpc_labview
             return ptr;
         }
 
-        const char* PackedMessageType(const char* ptr, ParseContext* ctx, google::protobuf::RepeatedField<MessageType>* value)
+        const char* PackedMessageType(const char* ptr, ParseContext* ctx, google::protobuf::RepeatedPtrField<MessageType>* value)
         {
             return PackedFunc(value, ptr, ctx);
         }
