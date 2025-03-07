@@ -10,7 +10,7 @@
 
 using namespace google::protobuf::internal;
 
-namespace grpc_labview 
+namespace grpc_labview
 {
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
@@ -37,32 +37,25 @@ namespace grpc_labview
         int GetCachedSize(void) const ;
         size_t ByteSizeLong() const ;
         virtual void PostInteralParseAction() {};
-        
+
         void MergeFrom(const google::protobuf::Message &from) final;
         void MergeFrom(const LVMessage &from);
         void CopyFrom(const google::protobuf::Message &from) ;
         void CopyFrom(const LVMessage &from);
+        void CopyOneofIndicesToCluster(int8_t* cluster) const;
         void InternalSwap(LVMessage *other);
         google::protobuf::Metadata GetMetadata() const final;
 
         bool ParseFromByteBuffer(const grpc::ByteBuffer& buffer);
         std::unique_ptr<grpc::ByteBuffer> SerializeToByteBuffer();
 
-        void SetLVClusterHandle(const char* lvClusterHandle) {
-            _LVClusterHandle = lvClusterHandle;
-        };
-
-        const char* GetLVClusterHandleSharedPtr() {
-            return _LVClusterHandle;
-        };
-
         std::map<int, std::shared_ptr<LVMessageValue>> _values;
         std::shared_ptr<MessageMetadata> _metadata;
+        std::map<std::string, int> _oneofContainerToSelectedIndexMap;
 
     protected:
         mutable google::protobuf::internal::CachedSize _cached_size_;
         google::protobuf::UnknownFieldSet _unknownFields;
-        const char* _LVClusterHandle;
 
         virtual const char *ParseBoolean(const MessageElementMetadata& fieldInfo, uint32_t index, const char *ptr, google::protobuf::internal::ParseContext *ctx);
         virtual const char *ParseInt32(const MessageElementMetadata& fieldInfo, uint32_t index, const char *ptr, google::protobuf::internal::ParseContext *ctx);
@@ -82,5 +75,6 @@ namespace grpc_labview
         virtual const char *ParseBytes(unsigned int tag, const MessageElementMetadata& fieldInfo, uint32_t index, const char *ptr, google::protobuf::internal::ParseContext *ctx);
         virtual const char *ParseNestedMessage(google::protobuf::uint32 tag, const MessageElementMetadata& fieldInfo, uint32_t index, const char *ptr, google::protobuf::internal::ParseContext *ctx);
         bool ExpectTag(google::protobuf::uint32 tag, const char* ptr);
+        int CalculateTagWireSize(google::protobuf::uint32 tag);
     };
 }

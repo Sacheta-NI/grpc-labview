@@ -8,6 +8,8 @@ project(labview-grpc C CXX)
 
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+  # Set default visibility to hidden, only export LIBRARY_EXPORT symbols from the shared library
+  add_compile_options(-fvisibility=hidden)
 else()
   add_definitions(-D_WIN32_WINNT=0x600)
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -33,6 +35,10 @@ if(modify_command_result)
 endif()
 
 find_package(Threads REQUIRED)
+
+# Setup ASIO
+set(ASIO_ROOT "${CMAKE_SOURCE_DIR}/third_party/asio")
+set(ASIO_INCLUDE_DIRS "${ASIO_ROOT}/asio/include")
 
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
@@ -67,7 +73,7 @@ endif()
 #----------------------------------------------------------------------
 # Include generated *.pb.h files
 #----------------------------------------------------------------------
-include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" "./third_party/grpc" "${CMAKE_CURRENT_BINARY_DIR}/gens")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}" "./src" "./third_party/grpc" "${CMAKE_CURRENT_BINARY_DIR}/gens" "${ASIO_INCLUDE_DIRS}")
 
 #----------------------------------------------------------------------
 # LabVIEW support for grpc and protobuf
@@ -96,7 +102,9 @@ add_library(labview_grpc_server SHARED
   src/lv_proto_server_reflection_plugin.cc
   src/lv_proto_server_reflection_service.cc
   src/message_element_metadata_owner.cc
+  src/message_metadata.cc
   src/unpacked_fields.cc
+  src/well_known_messages.cc
 )
 target_link_libraries(labview_grpc_server
    ${_REFLECTION}

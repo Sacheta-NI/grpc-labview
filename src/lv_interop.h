@@ -20,10 +20,10 @@
 #ifdef _WIN32
     #define LIBRARY_EXPORT extern "C" __declspec(dllexport)
 #else
-    #define LIBRARY_EXPORT extern "C"
+    #define LIBRARY_EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
-namespace grpc_labview 
+namespace grpc_labview
 {
     class gRPCid;
     extern PointerManager<gRPCid> gPointerManager;
@@ -50,6 +50,9 @@ namespace grpc_labview
 
     int AlignClusterOffset(int clusterOffset, int alignmentRequirement);
 
+    // Provides type code for use with NumericArrayResize function for various sizes of data types.
+    int32_t GetTypeCodeForSize(int byteSize);
+
     //---------------------------------------------------------------------
     // LabVIEW definitions
     //---------------------------------------------------------------------
@@ -64,11 +67,11 @@ namespace grpc_labview
     };
 
     using LStrPtr = LStr*;
-    using LStrHandle =  LStr**;
+    using LStrHandle = LStr**;
 
     struct LV1DArray {
-        int32_t cnt; /* number of bytes that follow */
-        int8_t rawBytes[1]; /* cnt bytes */
+        int32_t cnt; /* number of T elements that follow */
+        int8_t rawBytes[1]; /* (cnt * sizeof(T)) bytes */
 
         template<typename T>
         T* bytes()
@@ -93,13 +96,30 @@ namespace grpc_labview
     using LV1DArrayPtr = LV1DArray*;
     using LV1DArrayHandle = LV1DArray**;
 
+    struct LV2DArray {
+        int32_t dimensionSizes[2]; /* number of T elements for each dimension */
+        int8_t rawBytes[1]; /* (firstDimensionSize * secondDimensionSize * sizeof(T)) bytes */
+
+        // The start of 2D array data is always aligned and does not require padding.
+        template<typename T>
+        T* bytes()
+        {
+            static_assert(!std::is_class<T>::value, "T must not be a struct/class type.");
+            static_assert(sizeof(T) <= 8, "Need to revisit logic if we ever have element size larger than 8 bytes.");
+            return (T*)(rawBytes);
+        }
+    };
+
+    using LV2DArrayPtr = LV2DArray*;
+    using LV2DArrayHandle = LV2DArray**;
+
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
     #ifdef _PS_4
     #pragma pack (push, 1)
     #endif
     struct AnyCluster
-    {    
+    {
         LStrHandle TypeUrl;
         LV1DArrayHandle Bytes;
     };
@@ -110,11 +130,11 @@ namespace grpc_labview
     //---------------------------------------------------------------------
     //---------------------------------------------------------------------
     void SetLVRTModulePath(std::string modulePath);
-	void InitCallbacks();
+    void InitCallbacks();
     void SetLVString(LStrHandle* lvString, std::string str);
     std::string GetLVString(LStrHandle lvString);
     int NumericArrayResize(int32_t typeCode, int32_t numDims, void* handle, size_t size);
-    int PostUserEvent(LVUserEventRef ref, void *data);
+    int PostUserEvent(LVUserEventRef ref, void* data);
     unsigned char** DSNewHandle(size_t n);
     int DSSetHandleSize(void* h, size_t n);
     long DSDisposeHandle(void* h);
